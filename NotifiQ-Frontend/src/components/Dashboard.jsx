@@ -7,17 +7,28 @@ import {
   AppBar,
   Toolbar,
   Snackbar,
-  Alert
+  Alert,
+  TextField,
+  MenuItem
 } from '@mui/material';
 import { getReminders, deleteReminder } from '../api/client';
 import { wsService } from '../api/websocket';
 import ReminderCard from './ReminderCard';
 import ReminderDialog from './ReminderDialog';
+import ViewReminderDialog from './ViewReminderDialog';
 
 export default function Dashboard({ onLogout }) {
   const [reminders, setReminders] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingReminder, setEditingReminder] = useState(null);
+  const [viewingReminder, setViewingReminder] = useState(null);
+  const [filters, setFilters] = useState({
+    keyword: '',
+    priority: '',
+    status: '',
+    reminderFrom: '',
+    reminderTo: ''
+  });
   
   // Real-time notification state
   const [notification, setNotification] = useState(null);
@@ -61,9 +72,33 @@ export default function Dashboard({ onLogout }) {
     };
   }, []);
 
-  const fetchReminders = async () => {
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchReminders(filters);
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [filters]);
+
+  const fetchReminders = async (currentFilters = filters) => {
     try {
-      const res = await getReminders(0, 50);
+      const apiFilters = { ...currentFilters };
+      
+      const formatToFakeUTC = (dateStr) => {
+        if (!dateStr) return dateStr;
+        if (dateStr.length === 16) return `${dateStr}:00Z`;
+        if (dateStr.length === 19) return `${dateStr}Z`;
+        return dateStr;
+      };
+
+      if (apiFilters.reminderFrom) {
+        apiFilters.reminderFrom = formatToFakeUTC(apiFilters.reminderFrom);
+      }
+      if (apiFilters.reminderTo) {
+        apiFilters.reminderTo = formatToFakeUTC(apiFilters.reminderTo);
+      }
+
+      const res = await getReminders(0, 50, apiFilters);
       setReminders(res.data || []);
     } catch (err) {
       console.error('Failed to fetch reminders', err);
@@ -78,6 +113,10 @@ export default function Dashboard({ onLogout }) {
   const handleEdit = (reminder) => {
     setEditingReminder(reminder);
     setDialogOpen(true);
+  };
+
+  const handleView = (reminder) => {
+    setViewingReminder(reminder);
   };
 
   const handleDelete = async (id) => {
@@ -108,57 +147,71 @@ export default function Dashboard({ onLogout }) {
       </AppBar>
 
       <Container className="py-8">
-        <Box className="flex justify-between items-center mb-6">
+        <Box className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <Typography variant="h4" className="text-gray-800 font-bold">
             Your Reminders
           </Typography>
-          <Box className="flex gap-4">
-            <Button 
-              variant="outlined" 
-              color="secondary" 
-              onClick={() => {
-                console.log("Test Notification clicked");
-                if (!('Notification' in window)) {
-                  alert("This browser does not support desktop notifications.");
-                  return;
-                }
-                console.log("Current permission:", Notification.permission);
-                
-                if (Notification.permission === 'granted') {
-                  try {
-                    new Notification('Test Notification', { body: 'This is a test from NotifiQ!' });
-                    console.log("Notification object created successfully.");
-                  } catch (e) {
-                    console.error("Error creating Notification:", e);
-                    alert("Error creating notification. Check console.");
-                  }
-                } else {
-                  console.log("Requesting permission...");
-                  try {
-                    Notification.requestPermission().then(permission => {
-                      console.log("Permission result:", permission);
-                      if (permission === 'granted') {
-                        new Notification('Permission Granted', { body: 'Notifications are now enabled!' });
-                      } else {
-                        alert('Notification permission was denied. Please click the padlock icon next to your URL bar and allow notifications.');
-                      }
-                    }).catch(err => {
-                      console.error("requestPermission promise rejected:", err);
-                      alert("Error requesting permission.");
-                    });
-                  } catch (err) {
-                    console.error("requestPermission threw an error:", err);
-                    alert("Your browser does not support promise-based requestPermission.");
-                  }
-                }
-              }}
-            >
-              Test Notification
-            </Button>
-            <Button variant="contained" color="primary" onClick={handleCreate}>
+          <Box className="flex gap-4 w-full sm:w-auto">
+            <Button variant="contained" color="primary" onClick={handleCreate} className="w-full sm:w-auto" sx={{ width: { xs: '100%', sm: 'auto' } }}>
               Add Reminder
             </Button>
           </Box>
+        </Box>
+
+        <Box className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-6 glass">
+          <Typography variant="subtitle2" className="text-gray-600 mb-3 font-semibold">Filter Reminders</Typography>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <TextField
+              className="col-span-2 md:col-span-1"
+              size="small"
+              label="Search keyword"
+              value={filters.keyword}
+              onChange={(e) => setFilters(prev => ({ ...prev, keyword: e.target.value }))}
+            />
+            <TextField
+              className="col-span-1"
+              select
+              size="small"
+              label="Priority"
+              value={filters.priority}
+              onChange={(e) => setFilters(prev => ({ ...prev, priority: e.target.value }))}
+            >
+              <MenuItem value="">All</MenuItem>
+              <MenuItem value="LOW">Low</MenuItem>
+              <MenuItem value="MEDIUM">Medium</MenuItem>
+              <MenuItem value="HIGH">High</MenuItem>
+            </TextField>
+            <TextField
+              className="col-span-1"
+              select
+              size="small"
+              label="Status"
+              value={filters.status}
+              onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+            >
+              <MenuItem value="">All</MenuItem>
+              <MenuItem value="PENDING">Pending</MenuItem>
+              <MenuItem value="COMPLETED">Completed</MenuItem>
+            </TextField>
+            <TextField
+              className="col-span-1"
+              type="datetime-local"
+              size="small"
+              label="From"
+              slotProps={{ inputLabel: { shrink: true } }}
+              value={filters.reminderFrom}
+              onChange={(e) => setFilters(prev => ({ ...prev, reminderFrom: e.target.value }))}
+            />
+            <TextField
+              className="col-span-1"
+              type="datetime-local"
+              size="small"
+              label="To"
+              slotProps={{ inputLabel: { shrink: true } }}
+              value={filters.reminderTo}
+              onChange={(e) => setFilters(prev => ({ ...prev, reminderTo: e.target.value }))}
+            />
+          </div>
         </Box>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -168,6 +221,7 @@ export default function Dashboard({ onLogout }) {
                 reminder={reminder} 
                 onEdit={handleEdit} 
                 onDelete={handleDelete} 
+                onView={handleView}
               />
             </div>
           ))}
@@ -186,6 +240,12 @@ export default function Dashboard({ onLogout }) {
         open={dialogOpen} 
         onClose={handleDialogClose} 
         reminderToEdit={editingReminder} 
+      />
+
+      <ViewReminderDialog
+        open={!!viewingReminder}
+        onClose={() => setViewingReminder(null)}
+        reminder={viewingReminder}
       />
 
       <Snackbar 

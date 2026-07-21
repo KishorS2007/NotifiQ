@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, Typography, IconButton, Box, Chip } from '@mui/material';
 
-export default function ReminderCard({ reminder, onEdit, onDelete }) {
+export default function ReminderCard({ reminder, onEdit, onDelete, onView }) {
   const dateStr = new Date(reminder.remindAt).toLocaleString();
 
   const getPriorityColor = (priority) => {
@@ -14,7 +14,10 @@ export default function ReminderCard({ reminder, onEdit, onDelete }) {
   };
 
   return (
-    <Card className="shadow-md hover:shadow-lg transition-shadow duration-300 h-full flex flex-col glass">
+    <Card 
+      className="shadow-md hover:shadow-lg transition-shadow duration-300 h-full flex flex-col glass cursor-pointer"
+      onClick={() => onView && onView(reminder)}
+    >
       <CardContent className="flex flex-col flex-grow">
         <Box className="flex justify-between items-start mb-2">
           <Typography variant="h6" className="font-bold text-gray-800 line-clamp-1">
@@ -44,13 +47,19 @@ export default function ReminderCard({ reminder, onEdit, onDelete }) {
           <Box className="flex gap-2 justify-end mt-2 pt-2 border-t border-gray-100">
             <button 
               className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded"
-              onClick={() => onEdit(reminder)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(reminder);
+              }}
             >
               Edit
             </button>
             <button 
               className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded"
-              onClick={() => onDelete(reminder.reminderId)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(reminder.reminderId);
+              }}
             >
               Delete
             </button>

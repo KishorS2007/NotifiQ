@@ -1,5 +1,6 @@
 package com.kishor.NotifiQ.controllers;
 
+import java.time.Instant;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,8 +38,14 @@ public class ReminderController {
 	}
 	
 	@GetMapping
-	public ResponseEntity<List<ReminderResponse>> getAllreminders(@RequestParam(defaultValue = "0") int page ,@RequestParam(defaultValue = "5") int size){
-		List<ReminderResponse> reminders = reminderService.getAllReminders(page,size);
+	public ResponseEntity<List<ReminderResponse>> getAllreminders(
+			@RequestParam(defaultValue = "0") int page ,@RequestParam(defaultValue = "5") int size,
+			@RequestParam(required = false) String keyword , @RequestParam(required = false) String priority,
+			@RequestParam(required = false) String status ,@RequestParam(required = false) Instant reminderFrom ,
+			@RequestParam(required = false) Instant reminderTo 
+	){
+		
+		List<ReminderResponse> reminders = reminderService.getAllReminders(page,size,keyword,priority,status,reminderFrom,reminderTo);
 		return ResponseEntity.ok(reminders);
 	}
 	

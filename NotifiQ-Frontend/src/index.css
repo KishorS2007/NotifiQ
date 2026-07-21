@@ -17,3 +17,26 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: #f3f4f6;
 }
+
+/* Cross-device media queries */
+@media screen and (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+  .MuiContainer-root {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+}
+
+@media screen and (min-width: 641px) and (max-width: 1024px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+@media screen and (min-width: 1025px) {
+  html {
+    font-size: 16px;
+  }
+}

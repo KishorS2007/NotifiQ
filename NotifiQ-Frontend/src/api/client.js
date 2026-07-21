@@ -29,8 +29,15 @@ export const register = (userName, email, password) => {
   return client.post('/auth/register', { userName, email, password });
 };
 
-export const getReminders = (page = 0, size = 50) => {
-  return client.get(`/reminders?page=${page}&size=${size}`);
+export const getReminders = (page = 0, size = 50, filters = {}) => {
+  const params = new URLSearchParams({ page, size });
+  if (filters.keyword) params.append('keyword', filters.keyword);
+  if (filters.priority) params.append('priority', filters.priority);
+  if (filters.status) params.append('status', filters.status);
+  if (filters.reminderFrom) params.append('reminderFrom', filters.reminderFrom);
+  if (filters.reminderTo) params.append('reminderTo', filters.reminderTo);
+
+  return client.get(`/reminders?${params.toString()}`);
 };
 
 export const getReminderById = (id) => {
