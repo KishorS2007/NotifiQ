@@ -2,16 +2,20 @@ package com.kishor.NotifiQ.service;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.kishor.NotifiQ.dto.NotificationResponse;
 import com.kishor.NotifiQ.entity.NotificationEntity;
 import com.kishor.NotifiQ.entity.NotificationEntity.NotificationStatus;
 import com.kishor.NotifiQ.entity.ReminderEntity;
 import com.kishor.NotifiQ.entity.ReminderEntity.ReminderStatus;
+import com.kishor.NotifiQ.exception.NotificationNotFoundException;
+import com.kishor.NotifiQ.exception.ResourceAccessDeniedException;
 import com.kishor.NotifiQ.repository.NotificationRepository;
 import com.kishor.NotifiQ.repository.ReminderRepository;
 
@@ -19,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class NotificationService {
 	
 	private final ReminderRepository reminderRepo;
@@ -26,6 +31,8 @@ public class NotificationService {
 	private final NotificationRepository notificationRepo;
 	
 	private final SimpMessagingTemplate messagingTemplate;
+
+	private final AuthService authService;
 	
 	
 	private NotificationResponse toResponse(NotificationEntity notification) {
@@ -34,10 +41,12 @@ public class NotificationService {
 		return NotificationResponse.builder()
 					.notificationId(notification.getNotificationId())
 					.reminderId(reminder.getReminderId())
-					.title(reminder.getTitle())
-					.description(reminder.getDescription())
+					.title(notification.getTitle())
+					.description(notification.getDescription())
 					.priority(reminder.getPriority().name())
 					.createdAt(notification.getCreatedAt())
+					.status(notification.getStatus().name())
+					.readAt(notification.getReadAt())
 					.build();
 	}
 	
@@ -67,7 +76,7 @@ public class NotificationService {
 
 	            case NONE -> {
 	                reminder.setStatus(ReminderStatus.COMPLETED);
-	                reminder.setDeletedAt(Instant.now());
+//	                reminder.setDeletedAt(Instant.now());
 	            }
 
 	            case MINUTE -> {
@@ -142,5 +151,57 @@ public class NotificationService {
 
 	    System.out.println("Total Notifications : " + reminders.size());
 	    System.out.println("========================================\n");
+	}
+
+
+	public List<NotificationResponse> getUnreadNotifications() {
+		List<NotificationEntity> notifications = notificationRepo.findByUserAndStatus(authService.getCurrentUser(),NotificationStatus.UNREAD);
+		notifications.sort(
+			    Comparator.comparing(NotificationEntity::getCreatedAt)
+		);
+		
+		return notifications.stream().map(notification -> {
+			return toResponse(notification);
+		}).toList();
+	}
+
+
+	public void MarkNotificationRead(Long notificationId) {
+		NotificationEntity notification = notificationRepo.findById(notificationId).orElseThrow(
+				() -> new NotificationNotFoundException("Notification Not Found with id: "+notificationId)
+		);
+		
+		if(!notification.getUser().getUserId().equals(authService.getCurrentUser().getUserId())) {
+		        throw new ResourceAccessDeniedException("Not authorized to access this notification");
+	    }
+		
+		notification.setReadAt(Instant.now());
+		notification.setStatus(NotificationStatus.READ);
+		
+		notificationRepo.save(notification);
+	}
+
+
+	public NotificationResponse getNotificationById(Long notificationId) {
+		NotificationEntity notification = notificationRepo.findById(notificationId).orElseThrow(
+				() -> new NotificationNotFoundException("Notification Not Found with id: "+notificationId)
+		);
+		
+		if(!notification.getUser().getUserId().equals(authService.getCurrentUser().getUserId())) {
+		        throw new ResourceAccessDeniedException("Not authorized to access this notification");
+	    }
+		
+		return toResponse(notification);
+	}
+	
+	public void markAllNotificationsAsRead() {
+		List<NotificationEntity> notifications = notificationRepo.findByUserAndStatus(authService.getCurrentUser(), NotificationStatus.UNREAD);
+		
+		notifications.forEach(notification -> {
+			notification.setReadAt(Instant.now());
+			notification.setStatus(NotificationStatus.READ);
+		});
+		
+		notificationRepo.saveAll(notifications);
 	}
 }

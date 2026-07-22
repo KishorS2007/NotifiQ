@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, Typography, IconButton, Box, Chip } from '@mui/material';
 
-export default function ReminderCard({ reminder, onEdit, onDelete, onView }) {
+export default function ReminderCard({ reminder, onView }) {
   const dateStr = new Date(reminder.remindAt).toLocaleString();
 
   const getPriorityColor = (priority) => {
@@ -20,14 +20,24 @@ export default function ReminderCard({ reminder, onEdit, onDelete, onView }) {
     >
       <CardContent className="flex flex-col flex-grow">
         <Box className="flex justify-between items-start mb-2">
-          <Typography variant="h6" className="font-bold text-gray-800 line-clamp-1">
+          <Typography variant="h6" className="font-bold text-gray-800 line-clamp-1 mt-1">
             {reminder.title}
           </Typography>
-          <Chip 
-            label={reminder.priority || 'MEDIUM'} 
-            size="small" 
-            color={getPriorityColor(reminder.priority)} 
-          />
+          <Box className="flex flex-col items-end gap-1 shrink-0 ml-2">
+            <Chip 
+              label={reminder.priority || 'MEDIUM'} 
+              size="small" 
+              color={getPriorityColor(reminder.priority)} 
+            />
+            {reminder.status === 'COMPLETED' && (
+              <span className="flex items-center text-green-600 font-bold text-[11px] tracking-wide">
+                <svg className="w-3 h-3 mr-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                COMPLETED
+              </span>
+            )}
+          </Box>
         </Box>
         
         <Typography variant="body2" color="text.secondary" className="mb-4 flex-grow line-clamp-3">
@@ -44,26 +54,7 @@ export default function ReminderCard({ reminder, onEdit, onDelete, onView }) {
             </Typography>
           )}
           
-          <Box className="flex gap-2 justify-end mt-2 pt-2 border-t border-gray-100">
-            <button 
-              className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(reminder);
-              }}
-            >
-              Edit
-            </button>
-            <button 
-              className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(reminder.reminderId);
-              }}
-            >
-              Delete
-            </button>
-          </Box>
+
         </Box>
       </CardContent>
     </Card>

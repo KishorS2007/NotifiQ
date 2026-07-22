@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -39,7 +40,7 @@ public class ReminderService {
 		return ReminderResponse.builder().reminderId(reminder.getReminderId()).title(reminder.getTitle())
 				.description(reminder.getDescription()).remindAt(reminder.getRemindAt())
 				.repeatInterval(reminder.getRepeatInterval()).repeatUnit(reminder.getRepeatUnit())
-				.priority(reminder.getPriority()).build();
+				.priority(reminder.getPriority()).status(reminder.getStatus().name()).build();
 	}
 
 	public void addReminder(ReminderDTO request) {
@@ -57,17 +58,18 @@ public class ReminderService {
 	public List<ReminderResponse> getAllReminders(int page, int size, String keyword, String priority, String status,
 			Instant reminderFrom, Instant reminderTo) {
 
-		Pageable pageable = PageRequest.of(page, size);
+		Pageable pageable = PageRequest.of(page, size , Sort.by("createdAt").descending());
 		UserEntity user = authService.getCurrentUser();
 
 		Specification<ReminderEntity> spec = Specification.where(ReminderSpecification.hasUser(user))
 				.and(ReminderSpecification.hasTextLike(keyword))
 				.and(ReminderSpecification.hasPriority(priority))
 				.and(ReminderSpecification.hasStatus(status))
+				.and(ReminderSpecification.isNotDeleted())
 				.and(ReminderSpecification.reminderBetween(reminderFrom, reminderTo));
 
-		Page<ReminderEntity> reminders = reminderRepo.findAll(spec,pageable);
-		
+		Page<ReminderEntity> reminders = reminderRepo.findAll(spec, pageable);
+
 		return reminders.getContent().stream().map(reminder -> createResponse(reminder)).toList();
 	}
 
@@ -95,13 +97,13 @@ public class ReminderService {
 	public void updateReminder(Long reminderId, ReminderUpdateRequest dto) {
 
 		if (reminderId == null) {
-			new ReminderNotFoundException("Reminder not found with id : " + reminderId);
+			throw new ReminderNotFoundException("Reminder not found with id : " + reminderId);
 		}
 
 		ReminderEntity reminder = reminderRepo.findByReminderIdAndDeletedAtIsNull(reminderId)
 				.orElseThrow(() -> new ReminderNotFoundException("Reminder not found with id : " + reminderId));
 
-		if (!reminder.getUser().equals(authService.getCurrentUser())) {
+		if (!reminder.getUser().getUserId().equals(authService.getCurrentUser().getUserId())) {
 			throw new ResourceAccessDeniedException("You are not authorized to access this resource.!!");
 		}
 

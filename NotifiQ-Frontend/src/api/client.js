@@ -56,4 +56,20 @@ export const deleteReminder = (id) => {
   return client.delete(`/reminders/${id}`);
 };
 
+export const getUnreadNotifications = () => {
+  return client.get('/notifications');
+};
+
+export const getNotificationById = (id) => {
+  return client.get(`/notifications/${id}`);
+};
+
+export const markNotificationRead = (id) => {
+  return client.patch(`/notifications/${id}`);
+};
+
+export const markAllNotificationsRead = () => {
+  return client.patch('/notifications');
+};
+
 export default client;

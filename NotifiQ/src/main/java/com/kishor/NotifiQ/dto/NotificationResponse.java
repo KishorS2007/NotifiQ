@@ -5,8 +5,13 @@ import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
+@RequiredArgsConstructor
 @AllArgsConstructor
 @Builder
 public class NotificationResponse {
@@ -23,4 +28,7 @@ public class NotificationResponse {
 	
 	private Instant createdAt;
 	
+	private Instant readAt;
+	
+	private String status;
 }

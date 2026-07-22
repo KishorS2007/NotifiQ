@@ -72,6 +72,17 @@ public class GlobalExceptionHandler {
 		return new ResponseEntity<>(errorBody , status);
 	}
 	
+	@ExceptionHandler(NotificationNotFoundException.class)
+	public ResponseEntity<ErrorResponseDTO> handleNotificationNotFoundException(UserNotFoundException ex){
+		
+		HttpStatus status = HttpStatus.NOT_FOUND;
+		ErrorResponseDTO errorBody = ErrorResponseDTO.builder()
+										.status(status.value())
+										.error(status.getReasonPhrase())
+										.message(ex.getMessage())
+										.build();
+		return new ResponseEntity<>(errorBody , status);
+	}
 	
 	@ExceptionHandler(ResourceAccessDeniedException.class)
 	public ResponseEntity<ErrorResponseDTO> handleAccessDeniedException(ResourceAccessDeniedException ex){

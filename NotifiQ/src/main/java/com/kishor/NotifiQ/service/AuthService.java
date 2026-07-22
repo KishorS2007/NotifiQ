@@ -1,5 +1,6 @@
 package com.kishor.NotifiQ.service;
 
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,8 +53,8 @@ public class AuthService {
 							.build();
 								
 		userRepo.save(user);
-		
-		String token = service.generateToken(user);
+		Map<String,Object> extraClaims = Map.of("username",user.getFullName());
+		String token = service.generateToken(extraClaims,user);
 		RegisterResponse registerResponse = new RegisterResponse(token);
 		
 		return registerResponse;
@@ -78,7 +79,8 @@ public class AuthService {
 //				user.get().getAuthorities()
 		));
 		
-		String token = service.generateToken(user.get());
+		Map<String,Object> extraClaims = Map.of("username",user.get().getFullName());
+		String token = service.generateToken(extraClaims,user.get());
 		LoginResponse loginResponse = new LoginResponse(token);
 		
 		return loginResponse;

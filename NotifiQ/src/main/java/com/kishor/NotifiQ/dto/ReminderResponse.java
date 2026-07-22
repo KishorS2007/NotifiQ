@@ -18,11 +18,11 @@ import lombok.Data;
 @AllArgsConstructor
 
 public class ReminderResponse {
-	
-	@NotNull
-	private Long reminderId;
 
-	@NotBlank
+    @NotNull
+    private Long reminderId;
+
+    @NotBlank
     @Size(max = 200)
     private String title;
 
@@ -41,6 +41,7 @@ public class ReminderResponse {
     @Builder.Default
     @NotNull
     private Priority priority = Priority.MEDIUM;
-	
-	
+
+    private String status;
+
 }

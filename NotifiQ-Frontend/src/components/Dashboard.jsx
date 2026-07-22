@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Box, 
   Container, 
@@ -9,19 +9,30 @@ import {
   Snackbar,
   Alert,
   TextField,
-  MenuItem
+  MenuItem,
+  Avatar,
+  IconButton,
+  Menu,
+  Badge
 } from '@mui/material';
-import { getReminders, deleteReminder } from '../api/client';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import { getReminders, deleteReminder, getReminderById, getUnreadNotifications, markNotificationRead, getNotificationById, markAllNotificationsRead } from '../api/client';
 import { wsService } from '../api/websocket';
 import ReminderCard from './ReminderCard';
 import ReminderDialog from './ReminderDialog';
 import ViewReminderDialog from './ViewReminderDialog';
+import ViewNotificationDialog from './ViewNotificationDialog';
 
 export default function Dashboard({ onLogout }) {
   const [reminders, setReminders] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingReminder, setEditingReminder] = useState(null);
+  const editingReminderRef = useRef(editingReminder);
+  useEffect(() => { editingReminderRef.current = editingReminder; }, [editingReminder]);
+
   const [viewingReminder, setViewingReminder] = useState(null);
+  const viewingReminderRef = useRef(viewingReminder);
+  useEffect(() => { viewingReminderRef.current = viewingReminder; }, [viewingReminder]);
   const [filters, setFilters] = useState({
     keyword: '',
     priority: '',
@@ -32,9 +43,40 @@ export default function Dashboard({ onLogout }) {
   
   // Real-time notification state
   const [notification, setNotification] = useState(null);
+  const [unreadNotifications, setUnreadNotifications] = useState([]);
+  const [notificationMenuAnchor, setNotificationMenuAnchor] = useState(null);
+  const [viewingNotification, setViewingNotification] = useState(null);
+
+  // Profile menu state
+  const [profileAnchorEl, setProfileAnchorEl] = useState(null);
+
+  const getFirstNameFromToken = () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return 'User';
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      
+      if (payload.fullName) {
+        return payload.fullName.split(' ')[0];
+      }
+      if (payload.username) {
+        return payload.username.split(' ')[0];
+      }
+      // Fallback to email username if fullName isn't provided by backend yet
+      if (payload.sub) {
+        return payload.sub.split('@')[0];
+      }
+    } catch (e) {
+      console.error("Failed to parse token", e);
+    }
+    return 'User';
+  };
+
+  const firstName = getFirstNameFromToken();
 
   useEffect(() => {
     fetchReminders();
+    fetchUnreadNotifications();
     
     // Safely request notification permission
     try {
@@ -47,17 +89,51 @@ export default function Dashboard({ onLogout }) {
 
     // Connect to WebSocket
     wsService.connect((msg) => {
-      // Set a meaningful notification message based on the NotificationResponse DTO
-      const title = `Reminder: ${msg.title || 'You have a new notification'}`;
-      setNotification(title);
+      // Set the full msg in state so we can add a View button to the Snackbar
+      setNotification(msg);
+      
+      setUnreadNotifications(prev => [msg, ...prev]);
+      
+      const currentEditing = editingReminderRef.current;
+      if (currentEditing && currentEditing.reminderId === msg.reminderId && currentEditing.repeatUnit === 'NONE') {
+        setDialogOpen(false);
+        setEditingReminder(null);
+      }
+      
+      const currentViewing = viewingReminderRef.current;
+      if (currentViewing && currentViewing.reminderId === msg.reminderId && currentViewing.repeatUnit === 'NONE') {
+        setViewingReminder(null);
+      }
 
-      // Trigger OS-level (Windows) notification
+      const title = `Reminder: ${msg.title || 'You have a new notification'}`;
+
       if ('Notification' in window && Notification.permission === 'granted') {
         try {
-          new Notification(title, {
+          const osNotification = new Notification(title, {
             body: msg.description || 'It is time for your reminder!',
             requireInteraction: true
           });
+          
+          // Prevent garbage collection of the notification object
+          window._activeNotifications = window._activeNotifications || [];
+          window._activeNotifications.push(osNotification);
+
+          const handleClick = function(event) {
+            if (event) event.preventDefault(); 
+            window.focus();
+            osNotification.close();
+            
+            console.log("Notification clicked. Message:", msg);
+            if (msg.notificationId) {
+              handleNotificationClick(msg);
+            } else {
+              console.warn("Notification did not contain a notificationId");
+            }
+          };
+
+          osNotification.onclick = handleClick;
+          osNotification.addEventListener('click', handleClick);
+          
         } catch (err) {
           console.error("OS Notification error:", err);
         }
@@ -105,6 +181,37 @@ export default function Dashboard({ onLogout }) {
     }
   };
 
+  const fetchUnreadNotifications = async () => {
+    try {
+      const res = await getUnreadNotifications();
+      setUnreadNotifications(res.data || []);
+    } catch (err) {
+      console.error('Failed to fetch notifications', err);
+    }
+  };
+
+  const handleNotificationClick = async (notif) => {
+    try {
+      setNotificationMenuAnchor(null);
+      await markNotificationRead(notif.notificationId);
+      const res = await getNotificationById(notif.notificationId);
+      setViewingNotification(res.data);
+      fetchUnreadNotifications(); // Refresh list to remove the read one
+    } catch (err) {
+      console.error('Failed to open notification', err);
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await markAllNotificationsRead();
+      setUnreadNotifications([]);
+      setNotificationMenuAnchor(null);
+    } catch (err) {
+      console.error('Failed to mark all as read', err);
+    }
+  };
+
   const handleCreate = () => {
     setEditingReminder(null);
     setDialogOpen(true);
@@ -140,9 +247,60 @@ export default function Dashboard({ onLogout }) {
           <Typography variant="h6" className="font-bold text-gray-800">
             NotifiQ Dashboard
           </Typography>
-          <Button variant="outlined" color="error" onClick={onLogout}>
-            Logout
-          </Button>
+          <Box className="flex items-center">
+            <Typography variant="body1" className="text-gray-700 mr-2 font-medium">
+              Hi {firstName}, welcome back
+            </Typography>
+            <IconButton onClick={(e) => setNotificationMenuAnchor(e.currentTarget)} size="small" sx={{ ml: 1, mr: 1 }}>
+              <Badge badgeContent={unreadNotifications.length} color="error">
+                <NotificationsIcon />
+              </Badge>
+            </IconButton>
+            <IconButton onClick={(e) => setProfileAnchorEl(e.currentTarget)} size="small">
+              <Avatar sx={{ width: 36, height: 36, bgcolor: 'primary.main' }}>
+                {firstName.charAt(0).toUpperCase()}
+              </Avatar>
+            </IconButton>
+            <Menu
+              anchorEl={notificationMenuAnchor}
+              open={Boolean(notificationMenuAnchor)}
+              onClose={() => setNotificationMenuAnchor(null)}
+              transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+              anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+              slotProps={{ paper: { style: { maxHeight: 400, width: '35ch' } } }}
+            >
+              <Box className="flex justify-between items-center" sx={{ px: 2, py: 1, borderBottom: '1px solid #eee', mb: 1 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>Notifications</Typography>
+                {unreadNotifications.length > 0 && (
+                  <Button size="small" onClick={handleMarkAllRead} sx={{ textTransform: 'none', fontSize: '0.75rem' }}>Mark all read</Button>
+                )}
+              </Box>
+              {unreadNotifications.length === 0 ? (
+                <MenuItem disabled>No unread notifications</MenuItem>
+              ) : (
+                unreadNotifications.map(notif => (
+                  <MenuItem key={notif.notificationId} onClick={() => handleNotificationClick(notif)}>
+                    <Box className="flex flex-col w-full">
+                      <Typography variant="body2" fontWeight="bold" noWrap>{notif.title}</Typography>
+                      <Typography variant="caption" color="text.secondary" noWrap>{notif.description}</Typography>
+                    </Box>
+                  </MenuItem>
+                ))
+              )}
+            </Menu>
+            <Menu
+              anchorEl={profileAnchorEl}
+              open={Boolean(profileAnchorEl)}
+              onClose={() => setProfileAnchorEl(null)}
+              onClick={() => setProfileAnchorEl(null)}
+              transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+              anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+            >
+              <MenuItem onClick={onLogout}>
+                <Typography color="error">Logout</Typography>
+              </MenuItem>
+            </Menu>
+          </Box>
         </Toolbar>
       </AppBar>
 
@@ -246,6 +404,30 @@ export default function Dashboard({ onLogout }) {
         open={!!viewingReminder}
         onClose={() => setViewingReminder(null)}
         reminder={viewingReminder}
+        onEdit={(r) => {
+          setViewingReminder(null);
+          handleEdit(r);
+        }}
+        onDelete={(id) => {
+          setViewingReminder(null);
+          handleDelete(id);
+        }}
+      />
+
+      <ViewNotificationDialog
+        open={!!viewingNotification}
+        onClose={() => setViewingNotification(null)}
+        notification={viewingNotification}
+        onViewReminder={async (reminderId) => {
+          try {
+             setViewingNotification(null);
+             const res = await getReminderById(reminderId);
+             setViewingReminder(res.data);
+          } catch(e) {
+             console.error("Could not fetch reminder details:", e);
+             alert("Failed to load schedule. It may have been deleted.");
+          }
+        }}
       />
 
       <Snackbar 
@@ -254,8 +436,36 @@ export default function Dashboard({ onLogout }) {
         onClose={() => setNotification(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert onClose={() => setNotification(null)} severity="info" sx={{ width: '100%' }}>
-          {notification}
+        <Alert 
+          onClose={() => setNotification(null)} 
+          severity="info" 
+          sx={{ width: '100%' }}
+          action={
+            <Button color="inherit" size="small" onClick={() => {
+              // Handle both new object state and old string state (fallback for HMR)
+              const notifId = typeof notification === 'object' && notification !== null ? notification.notificationId : null;
+              if (notifId) {
+                markNotificationRead(notifId).then(() => {
+                  getNotificationById(notifId).then(res => {
+                    setViewingNotification(res.data);
+                    setNotification(null);
+                    fetchUnreadNotifications();
+                  }).catch(err => {
+                    console.error("VIEW button failed to fetch notification:", err);
+                    alert("Failed to load notification details!");
+                  });
+                });
+              } else {
+                alert("Please refresh the page to apply the latest updates!");
+              }
+            }}>
+              VIEW
+            </Button>
+          }
+        >
+          {typeof notification === 'object' && notification !== null 
+            ? `Reminder: ${notification.title || ''}` 
+            : typeof notification === 'string' ? notification : ''}
         </Alert>
       </Snackbar>
     </Box>
