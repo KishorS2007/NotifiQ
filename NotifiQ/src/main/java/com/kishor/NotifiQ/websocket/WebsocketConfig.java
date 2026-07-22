@@ -8,6 +8,7 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
 import com.kishor.NotifiQ.config.JwtChannelInterceptor;
+import org.springframework.beans.factory.annotation.Value;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,11 +19,13 @@ public class WebsocketConfig implements WebSocketMessageBrokerConfigurer {
 	
 	private final JwtChannelInterceptor jwtChannelInterceptor;
 
+	@Value("${frontend.url}")
+	private String frontendUrl;
 	
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
 		registry.addEndpoint("/ws")
-				.setAllowedOrigins("http://localhost:5500", "http://127.0.0.1:5500");
+				.setAllowedOrigins("http://localhost:5500", "http://127.0.0.1:5500", frontendUrl);
 	}
 	
 	@Override
