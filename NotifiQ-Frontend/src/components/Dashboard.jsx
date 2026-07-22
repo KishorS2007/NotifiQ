@@ -70,7 +70,7 @@ export default function Dashboard({ onLogout }) {
         return payload.sub.split('@')[0];
       }
     } catch (e) {
-      console.error("Failed to parse token", e);
+      // console.error("Failed to parse token", e);
     }
     return 'User';
   };
@@ -84,10 +84,10 @@ export default function Dashboard({ onLogout }) {
     // Safely request notification permission
     try {
       if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-        Notification.requestPermission().catch(err => console.log('Notification permission request ignored or blocked:', err));
+        Notification.requestPermission().catch(err => { /* console.log('Notification permission request ignored or blocked:', err) */ });
       }
     } catch (err) {
-      console.log('Notification API not fully supported:', err);
+      // console.log('Notification API not fully supported:', err);
     }
 
     // Connect to WebSocket
@@ -126,11 +126,11 @@ export default function Dashboard({ onLogout }) {
             window.focus();
             osNotification.close();
             
-            console.log("Notification clicked. Message:", msg);
+            // console.log("Notification clicked. Message:", msg);
             if (msg.notificationId) {
               handleNotificationClick(msg);
             } else {
-              console.warn("Notification did not contain a notificationId");
+              // console.warn("Notification did not contain a notificationId");
             }
           };
 
@@ -138,7 +138,7 @@ export default function Dashboard({ onLogout }) {
           osNotification.addEventListener('click', handleClick);
           
         } catch (err) {
-          console.error("OS Notification error:", err);
+          // console.error("OS Notification error:", err);
         }
       }
 
@@ -180,7 +180,7 @@ export default function Dashboard({ onLogout }) {
       const res = await getReminders(0, 50, apiFilters);
       setReminders(res.data || []);
     } catch (err) {
-      console.error('Failed to fetch reminders', err);
+      // console.error('Failed to fetch reminders', err);
     }
   };
 
@@ -189,7 +189,7 @@ export default function Dashboard({ onLogout }) {
       const res = await getUnreadNotifications();
       setUnreadNotifications(res.data || []);
     } catch (err) {
-      console.error('Failed to fetch notifications', err);
+      // console.error('Failed to fetch notifications', err);
     }
   };
 
@@ -201,7 +201,7 @@ export default function Dashboard({ onLogout }) {
       setViewingNotification(res.data);
       fetchUnreadNotifications(); // Refresh list to remove the read one
     } catch (err) {
-      console.error('Failed to open notification', err);
+      // console.error('Failed to open notification', err);
     }
   };
 
@@ -211,7 +211,7 @@ export default function Dashboard({ onLogout }) {
       setUnreadNotifications([]);
       setNotificationMenuAnchor(null);
     } catch (err) {
-      console.error('Failed to mark all as read', err);
+      // console.error('Failed to mark all as read', err);
     }
   };
 
@@ -234,7 +234,7 @@ export default function Dashboard({ onLogout }) {
       await deleteReminder(id);
       fetchReminders();
     } catch (err) {
-      console.error('Failed to delete', err);
+      // console.error('Failed to delete', err);
     }
   };
 
@@ -466,7 +466,7 @@ export default function Dashboard({ onLogout }) {
              const res = await getReminderById(reminderId);
              setViewingReminder(res.data);
           } catch(e) {
-             console.error("Could not fetch reminder details:", e);
+             // console.error("Could not fetch reminder details:", e);
              alert("Failed to load schedule. It may have been deleted.");
           }
         }}
@@ -493,7 +493,7 @@ export default function Dashboard({ onLogout }) {
                     setNotification(null);
                     fetchUnreadNotifications();
                   }).catch(err => {
-                    console.error("VIEW button failed to fetch notification:", err);
+                    // console.error("VIEW button failed to fetch notification:", err);
                     alert("Failed to load notification details!");
                   });
                 });

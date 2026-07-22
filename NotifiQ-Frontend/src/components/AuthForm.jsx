@@ -38,7 +38,7 @@ export default function AuthForm({ onAuthSuccess }) {
   const [successMsg, setSuccessMsg] = useState('');
 
   const extractErrorMessage = (err, defaultMsg) => {
-    console.error("Auth error:", err, err.response);
+    // console.error("Auth error:", err, err.response);
     
     if (!err.response) {
       return err.message || defaultMsg;

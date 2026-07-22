@@ -64,7 +64,7 @@ public class NotificationService {
 		
 		if(reminders.isEmpty()) return;	
 		
-		consoleReminders(reminders);
+//		consoleReminders(reminders);
 		
 		List<NotificationEntity> notifications = new ArrayList<>();
 		
@@ -76,7 +76,6 @@ public class NotificationService {
 
 	            case NONE -> {
 	                reminder.setStatus(ReminderStatus.COMPLETED);
-//	                reminder.setDeletedAt(Instant.now());
 	            }
 
 	            case MINUTE -> {
