@@ -11,14 +11,14 @@ public class ReminderSpecification {
 	
 	public static Specification<ReminderEntity> hasUser(UserEntity user){
 		
-		return (root,_,cb)->{
+		return (root, query, cb)->{
 			if(user == null) return null;
 			return cb.equal(root.get("user"), user);
 		};
 	}
 	
 	public static Specification<ReminderEntity> hasTextLike(String text) {
-		return (root,_,cb) -> {
+		return (root, query, cb) -> {
 			if(text == null || text.isBlank()) return null;
 			
 			String lowerKeyword = "%"+text.trim().toLowerCase()+"%";
@@ -34,7 +34,7 @@ public class ReminderSpecification {
 	
 	
 	public static Specification<ReminderEntity> hasPriority(String keyword){
-		return (root,_,cb)->{
+		return (root, query, cb)->{
 			if(keyword == null || keyword.isBlank()) return null;
 			
 			return cb.equal(root.get("priority").as(String.class), keyword.toUpperCase());
@@ -42,7 +42,7 @@ public class ReminderSpecification {
 	}
 	
 	public static Specification<ReminderEntity> hasStatus(String keyword){
-		return (root,_,cb)->{
+		return (root, query, cb)->{
 			if(keyword == null || keyword.isBlank() || keyword.equals("CANCELLED")) return null;
 			
 			return cb.equal(root.get("status").as(String.class),keyword.toUpperCase()); 
@@ -50,7 +50,7 @@ public class ReminderSpecification {
 	}
 	
 	public static Specification<ReminderEntity> reminderBetween(Instant from,Instant to){
-		return (root,_,cb)->{
+		return (root, query, cb)->{
 			if(from == null && to == null) return null;
 			
 			if(from == null) {
@@ -64,7 +64,7 @@ public class ReminderSpecification {
 	}
 
 	public static Specification<ReminderEntity> isNotDeleted() {
-		return (root,_,cb)->{
+		return (root, query, cb)->{
 			return cb.isNull(root.get("deletedAt"));
 		};
 	}
