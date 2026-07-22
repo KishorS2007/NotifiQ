@@ -1,6 +1,8 @@
 import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
 
 const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws';
+const SOCKJS_URL = WS_URL.replace(/^ws/, 'http');
 
 export class WebSocketService {
   constructor() {
@@ -13,7 +15,7 @@ export class WebSocketService {
     if (!token) return;
 
     this.client = new Client({
-      brokerURL: WS_URL,
+      webSocketFactory: () => new SockJS(SOCKJS_URL),
       connectHeaders: {
         Authorization: `Bearer ${token}`,
       },

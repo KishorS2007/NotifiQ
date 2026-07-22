@@ -32,8 +32,7 @@ public class SecurityConfig {
 	@Bean
 	CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOriginPatterns(
-				Arrays.asList("http://localhost:5500", "http://127.0.0.1:5500", "https://*.vercel.app", frontendUrl));
+		configuration.setAllowedOriginPatterns(Arrays.asList("*"));
 		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(Arrays.asList("*"));
 		configuration.setAllowCredentials(true);
@@ -56,7 +55,7 @@ public class SecurityConfig {
 							.requestMatchers("/api/auth/**",
 									"/swagger-ui/**",
 									"/v3/api-docs/**",
-									"/ws/**")
+									"/ws", "/ws/**")
 							.permitAll()
 							.anyRequest().authenticated();
 				})
