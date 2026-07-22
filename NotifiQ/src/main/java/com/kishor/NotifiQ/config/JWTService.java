@@ -3,10 +3,10 @@ package com.kishor.NotifiQ.config;
 import java.time.Duration;
 import java.util.Date;
 import java.util.Map;
-import java.util.function.Function;
 
 import javax.crypto.SecretKey;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -15,11 +15,12 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
+
 @Service
 public class JWTService {
 	
-	
-	private static final String SECRET_KEY = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B59";
+	@Value("${jwt.SECRET}")
+	private String SECRET_KEY;
 	
 	// user name in this application is email
 	public String extractUserName(String token) {
