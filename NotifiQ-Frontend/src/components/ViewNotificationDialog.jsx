@@ -25,7 +25,18 @@ export default function ViewNotificationDialog({ open, onClose, notification, on
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth disableRestoreFocus>
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      maxWidth="sm" 
+      fullWidth 
+      disableRestoreFocus
+      slotProps={{
+        paper: {
+          className: 'light-glass rounded-2xl border border-white/20 shadow-xl'
+        }
+      }}
+    >
       <DialogTitle className="flex justify-between items-center border-b border-gray-100 pb-3">
         <span className="font-bold text-gray-800 break-words">{notification.title}</span>
         <Box className="flex items-center gap-3 ml-4">
@@ -41,7 +52,7 @@ export default function ViewNotificationDialog({ open, onClose, notification, on
           {notification.description}
         </Typography>
 
-        <Box className="bg-gray-50 p-4 rounded-lg">
+        <Box className="bg-white/40 p-5 rounded-xl border border-white/50 shadow-inner">
           <Typography variant="subtitle2" className="text-gray-600 mb-1">
             Triggered At
           </Typography>
@@ -50,16 +61,16 @@ export default function ViewNotificationDialog({ open, onClose, notification, on
           </Typography>
         </Box>
       </DialogContent>
-      <DialogActions className="p-4 border-t border-gray-100 flex justify-between items-center w-full">
+      <DialogActions className="px-8 py-5 border-t border-gray-100 flex justify-between items-center w-full">
         <Box>
            <Button 
               onClick={() => onViewReminder(notification.reminderId)} 
-              color="secondary" 
+              className="text-blue-600 hover:bg-blue-50 font-medium"
             >
               View Schedule
             </Button>
         </Box>
-        <Button onClick={onClose} color="primary" variant="contained">Close</Button>
+        <Button onClick={onClose} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 !text-white shadow-md shadow-blue-500/20 rounded-xl px-6 py-1.5 font-bold transition-all" sx={{ color: 'white' }}>Close</Button>
       </DialogActions>
     </Dialog>
   );

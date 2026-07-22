@@ -15,19 +15,19 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor	
 public class RegisterRequestDTO {
 	@NotBlank
-	@Length(min = 6)
+	@Length(min = 6,message = "Full Name must have minimum Length of 6")
 	@Column(unique = true)
 	private String userName;
 	
 	@NotBlank
-	@Email
+	@Email(message = "Email must be valid")
 	@Column(unique = true)
 	private String email;
 	
 	@Pattern(
 	    regexp = "^(?=.*[0-9])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$",
-	    message = "Password must be at least 8 characters and contain a digit,"
-	    			+ "an uppercase letter, and a special character"
+	    message = "Password must contain atleast 8 characters , digit ,"
+	    			+ "an uppercase and special character"
 	)
 	private String password;
 

@@ -15,7 +15,7 @@ export default function ReminderCard({ reminder, onView }) {
 
   return (
     <Card 
-      className="shadow-md hover:shadow-lg transition-shadow duration-300 h-full flex flex-col glass cursor-pointer"
+      className="shadow-md transition-shadow duration-300 h-full flex flex-col light-glass cursor-pointer hover:shadow-blue-500/20"
       onClick={() => onView && onView(reminder)}
     >
       <CardContent className="flex flex-col flex-grow">
@@ -30,7 +30,7 @@ export default function ReminderCard({ reminder, onView }) {
               color={getPriorityColor(reminder.priority)} 
             />
             {reminder.status === 'COMPLETED' && (
-              <span className="flex items-center text-green-600 font-bold text-[11px] tracking-wide">
+              <span className="flex items-center text-blue-600 font-bold text-[11px] tracking-wide">
                 <svg className="w-3 h-3 mr-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                 </svg>

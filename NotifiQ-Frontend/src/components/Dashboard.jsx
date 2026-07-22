@@ -13,7 +13,8 @@ import {
   Avatar,
   IconButton,
   Menu,
-  Badge
+  Badge,
+  Collapse
 } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import { getReminders, deleteReminder, getReminderById, getUnreadNotifications, markNotificationRead, getNotificationById, markAllNotificationsRead } from '../api/client';
@@ -22,6 +23,7 @@ import ReminderCard from './ReminderCard';
 import ReminderDialog from './ReminderDialog';
 import ViewReminderDialog from './ViewReminderDialog';
 import ViewNotificationDialog from './ViewNotificationDialog';
+import logoImage from '../assets/logo.png';
 
 export default function Dashboard({ onLogout }) {
   const [reminders, setReminders] = useState([]);
@@ -40,6 +42,7 @@ export default function Dashboard({ onLogout }) {
     reminderFrom: '',
     reminderTo: ''
   });
+  const [showFilters, setShowFilters] = useState(false);
   
   // Real-time notification state
   const [notification, setNotification] = useState(null);
@@ -240,15 +243,25 @@ export default function Dashboard({ onLogout }) {
     if (refresh) fetchReminders();
   };
 
+  const handleClearFilters = () => {
+    setFilters({
+      keyword: '',
+      priority: '',
+      status: '',
+      reminderFrom: '',
+      reminderTo: ''
+    });
+  };
+
   return (
-    <Box className="min-h-screen bg-gray-50">
-      <AppBar position="static" color="transparent" elevation={0} className="bg-white border-b border-gray-200">
+    <Box className="min-h-screen royal-bg">
+      <AppBar position="static" color="transparent" elevation={0} className="light-glass border-b border-white/20">
         <Toolbar className="flex justify-between">
-          <Typography variant="h6" className="font-bold text-gray-800">
-            NotifiQ Dashboard
-          </Typography>
           <Box className="flex items-center">
-            <Typography variant="body1" className="text-gray-700 mr-2 font-medium">
+            <img src={logoImage} alt="NotifiQ Logo" className="h-8 object-contain" />
+          </Box>
+          <Box className="flex items-center">
+            <Typography variant="body1" className="text-gray-700 mr-2 font-medium hidden sm:block">
               Hi {firstName}, welcome back
             </Typography>
             <IconButton onClick={(e) => setNotificationMenuAnchor(e.currentTarget)} size="small" sx={{ ml: 1, mr: 1 }}>
@@ -256,8 +269,8 @@ export default function Dashboard({ onLogout }) {
                 <NotificationsIcon />
               </Badge>
             </IconButton>
-            <IconButton onClick={(e) => setProfileAnchorEl(e.currentTarget)} size="small">
-              <Avatar sx={{ width: 36, height: 36, bgcolor: 'primary.main' }}>
+            <IconButton onClick={(e) => setProfileAnchorEl(e.currentTarget)} size="small" className="hover:scale-105 transition-transform">
+              <Avatar className="bg-gradient-to-br from-blue-600 to-indigo-600 shadow-md text-white font-bold" sx={{ width: 38, height: 38 }}>
                 {firstName.charAt(0).toUpperCase()}
               </Avatar>
             </IconButton>
@@ -304,20 +317,43 @@ export default function Dashboard({ onLogout }) {
         </Toolbar>
       </AppBar>
 
-      <Container className="py-8">
-        <Box className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+      <Container className="pt-4 pb-8">
+        <Box className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
           <Typography variant="h4" className="text-gray-800 font-bold">
             Your Reminders
           </Typography>
-          <Box className="flex gap-4 w-full sm:w-auto">
-            <Button variant="contained" color="primary" onClick={handleCreate} className="w-full sm:w-auto" sx={{ width: { xs: '100%', sm: 'auto' } }}>
-              Add Reminder
+          <Box className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <Button 
+              onClick={() => setShowFilters(!showFilters)}
+              className="w-full sm:w-auto bg-white/60 hover:bg-white/80 text-blue-600 font-semibold shadow-sm shadow-blue-500/10 border border-blue-100 ring-2 ring-blue-200 rounded-xl transition-all"
+              sx={{ padding: '8px 24px', textTransform: 'none', fontSize: '1rem', borderRadius: '12px', minWidth: { sm: '165px' } }}
+            >
+              {showFilters ? 'Hide Filters' : 'Filter Reminders'}
+            </Button>
+            <Button 
+              onClick={handleCreate} 
+              className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 !text-white font-bold shadow-lg shadow-blue-500/30 transition-all duration-300 transform hover:-translate-y-0.5" 
+              sx={{ borderRadius: '12px', padding: '8px 24px', textTransform: 'none', fontSize: '1rem', color: 'white' }}
+            >
+              + Add Reminder
             </Button>
           </Box>
         </Box>
 
-        <Box className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-6 glass">
-          <Typography variant="subtitle2" className="text-gray-600 mb-3 font-semibold">Filter Reminders</Typography>
+        <Collapse in={showFilters} timeout="auto" unmountOnExit>
+        <Box className="light-glass !shadow-sm p-4 rounded-2xl mb-6">
+          <Box className="flex justify-between items-center mb-2">
+            <Typography variant="subtitle1" className="text-slate-800 font-bold">Filter Reminders</Typography>
+            <Button 
+              size="small" 
+              variant="contained" 
+              color="error" 
+              onClick={handleClearFilters} 
+              sx={{ borderRadius: '8px', textTransform: 'none', padding: '2px 12px', fontSize: '0.75rem', fontWeight: 'bold', boxShadow: 'none' }}
+            >
+              Clear Filters
+            </Button>
+          </Box>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <TextField
               className="col-span-2 md:col-span-1"
@@ -325,6 +361,7 @@ export default function Dashboard({ onLogout }) {
               label="Search keyword"
               value={filters.keyword}
               onChange={(e) => setFilters(prev => ({ ...prev, keyword: e.target.value }))}
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.4)' } }}
             />
             <TextField
               className="col-span-1"
@@ -333,6 +370,7 @@ export default function Dashboard({ onLogout }) {
               label="Priority"
               value={filters.priority}
               onChange={(e) => setFilters(prev => ({ ...prev, priority: e.target.value }))}
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.4)' } }}
             >
               <MenuItem value="">All</MenuItem>
               <MenuItem value="LOW">Low</MenuItem>
@@ -346,6 +384,7 @@ export default function Dashboard({ onLogout }) {
               label="Status"
               value={filters.status}
               onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.4)' } }}
             >
               <MenuItem value="">All</MenuItem>
               <MenuItem value="PENDING">Pending</MenuItem>
@@ -359,6 +398,7 @@ export default function Dashboard({ onLogout }) {
               slotProps={{ inputLabel: { shrink: true } }}
               value={filters.reminderFrom}
               onChange={(e) => setFilters(prev => ({ ...prev, reminderFrom: e.target.value }))}
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.4)' } }}
             />
             <TextField
               className="col-span-1"
@@ -368,9 +408,11 @@ export default function Dashboard({ onLogout }) {
               slotProps={{ inputLabel: { shrink: true } }}
               value={filters.reminderTo}
               onChange={(e) => setFilters(prev => ({ ...prev, reminderTo: e.target.value }))}
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.4)' } }}
             />
           </div>
         </Box>
+        </Collapse>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {reminders.map((reminder, idx) => (

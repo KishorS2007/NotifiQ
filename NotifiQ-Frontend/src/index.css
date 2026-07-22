@@ -3,8 +3,26 @@
 @tailwind utilities;
 
 @layer utilities {
-  .glass {
-    @apply bg-white bg-opacity-70 backdrop-blur-md border border-white border-opacity-30;
+  .light-glass {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 40px rgba(37, 99, 235, 0.1);
+  }
+  
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .rotate-y-180 {
+    transform: rotateY(180deg);
   }
 }
 
@@ -15,28 +33,42 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f3f4f6;
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* Royal Background */
+.royal-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  background: 
+    radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.05), transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(29, 78, 216, 0.05), transparent 40%);
+  background-color: #f8fafc;
+}
+
+/* Custom Input autofill light mode fix */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active{
+    -webkit-box-shadow: 0 0 0 30px #f1f5f9 inset !important;
+    -webkit-text-fill-color: #0f172a !important;
+    transition: background-color 5000s ease-in-out 0s;
 }
 
 /* Cross-device media queries */
 @media screen and (max-width: 640px) {
-  html {
-    font-size: 14px;
-  }
-  .MuiContainer-root {
-    padding-left: 16px !important;
-    padding-right: 16px !important;
-  }
+  html { font-size: 14px; }
+  .MuiContainer-root { padding-left: 16px !important; padding-right: 16px !important; }
 }
-
 @media screen and (min-width: 641px) and (max-width: 1024px) {
-  html {
-    font-size: 15px;
-  }
+  html { font-size: 15px; }
 }
-
 @media screen and (min-width: 1025px) {
-  html {
-    font-size: 16px;
-  }
+  html { font-size: 16px; }
 }

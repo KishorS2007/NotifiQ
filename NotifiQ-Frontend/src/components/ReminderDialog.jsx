@@ -110,8 +110,19 @@ export default function ReminderDialog({ open, onClose, reminderToEdit }) {
   };
 
   return (
-    <Dialog open={open} onClose={() => onClose(false)} maxWidth="sm" fullWidth disableRestoreFocus>
-      <DialogTitle>{reminderToEdit ? 'Edit Reminder' : 'Create Reminder'}</DialogTitle>
+    <Dialog 
+      open={open} 
+      onClose={() => onClose(false)} 
+      maxWidth="sm" 
+      fullWidth 
+      disableRestoreFocus
+      slotProps={{
+        paper: {
+          className: 'light-glass rounded-2xl border border-white/20 shadow-xl'
+        }
+      }}
+    >
+      <DialogTitle className="font-bold text-slate-800 text-xl pb-3">{reminderToEdit ? 'Edit Reminder' : 'Create Reminder'}</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent dividers>
           {error && <Alert severity="error" className="mb-4">{error}</Alert>}
@@ -125,6 +136,7 @@ export default function ReminderDialog({ open, onClose, reminderToEdit }) {
                 value={formData.title}
                 onChange={handleChange}
                 slotProps={{ htmlInput: { minLength: 1, maxLength: 200 } }}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.4)' } }}
               />
             </div>
             <div className="col-span-1 sm:col-span-2">
@@ -138,6 +150,7 @@ export default function ReminderDialog({ open, onClose, reminderToEdit }) {
                 value={formData.description}
                 onChange={handleChange}
                 slotProps={{ htmlInput: {minLength:1, maxLength: 500 } }}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.4)' } }}
               />
             </div>
             <div className="col-span-1 sm:col-span-2">
@@ -150,6 +163,7 @@ export default function ReminderDialog({ open, onClose, reminderToEdit }) {
                 slotProps={{ inputLabel: { shrink: true } }}
                 value={formData.remindAt}
                 onChange={handleChange}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.4)' } }}
               />
             </div>
             <div className="col-span-1">
@@ -160,6 +174,7 @@ export default function ReminderDialog({ open, onClose, reminderToEdit }) {
                 fullWidth
                 value={formData.priority}
                 onChange={handleChange}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.4)' } }}
               >
                 <MenuItem value="LOW">Low</MenuItem>
                 <MenuItem value="MEDIUM">Medium</MenuItem>
@@ -177,6 +192,7 @@ export default function ReminderDialog({ open, onClose, reminderToEdit }) {
                   value={formData.repeatInterval}
                   onChange={handleChange}
                   slotProps={{ htmlInput: { min: 1 } }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.4)' } }}
                 />
                 <TextField
                   select
@@ -185,6 +201,7 @@ export default function ReminderDialog({ open, onClose, reminderToEdit }) {
                   className="w-1/2"
                   value={formData.repeatUnit}
                   onChange={handleChange}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.4)' } }}
                 >
                   <MenuItem value="NONE">None</MenuItem>
                   <MenuItem value="MINUTE">Minutes</MenuItem>
@@ -197,9 +214,9 @@ export default function ReminderDialog({ open, onClose, reminderToEdit }) {
             </div>
           </div>
         </DialogContent>
-        <DialogActions className="p-4">
-          <Button onClick={() => onClose(false)} color="inherit">Cancel</Button>
-          <Button type="submit" variant="contained" color="primary">Save</Button>
+        <DialogActions className="px-8 py-5 border-t border-gray-100">
+          <Button onClick={() => onClose(false)} className="text-slate-500 font-medium hover:text-slate-700">Cancel</Button>
+          <Button type="submit" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 !text-white shadow-md shadow-blue-500/20 rounded-xl px-6 py-1.5 font-bold transition-all" sx={{ color: 'white' }}>Save</Button>
         </DialogActions>
       </form>
     </Dialog>
