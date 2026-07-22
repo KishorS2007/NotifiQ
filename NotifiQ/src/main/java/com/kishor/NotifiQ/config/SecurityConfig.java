@@ -19,20 +19,21 @@ import java.util.Arrays;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-	
+
 	@Autowired
 	private JWTAuthenticationFilter authenticationFilter;
-	
+
 	@Autowired
 	private JwtAuthenticationEntryPoint authenticationEntryPoint;
-	
+
 	@Value("${frontend.url}")
 	private String frontendUrl;
 
 	@Bean
 	CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:5500", "http://127.0.0.1:5500", "https://*.vercel.app", frontendUrl));
+		configuration.setAllowedOriginPatterns(
+				Arrays.asList("http://localhost:5500", "http://127.0.0.1:5500", "https://*.vercel.app", frontendUrl));
 		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(Arrays.asList("*"));
 		configuration.setAllowCredentials(true);
@@ -40,31 +41,31 @@ public class SecurityConfig {
 		source.registerCorsConfiguration("/**", configuration);
 		return source;
 	}
-	
-	@Bean 
+
+	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) {
-		
+
 		http
-			.cors(org.springframework.security.config.Customizer.withDefaults())
-			.csrf(csrf->csrf.disable())
-			.exceptionHandling(ex->{
-				ex.authenticationEntryPoint(authenticationEntryPoint);
-			})
-			.authorizeHttpRequests(auth->{
-				auth
-					.requestMatchers("/api/auth/**",
+				.cors(org.springframework.security.config.Customizer.withDefaults())
+				.csrf(csrf -> csrf.disable())
+				.exceptionHandling(ex -> {
+					ex.authenticationEntryPoint(authenticationEntryPoint);
+				})
+				.authorizeHttpRequests(auth -> {
+					auth
+							.requestMatchers("/api/auth/**",
 									"/swagger-ui/**",
 									"/v3/api-docs/**",
-									 "/ws/**").permitAll()
-					.anyRequest().authenticated();
-			})
-			.sessionManagement(sess -> {
-				sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-			})
-			.addFilterBefore(authenticationFilter,UsernamePasswordAuthenticationFilter.class);
-			
-		
+									"/ws/**")
+							.permitAll()
+							.anyRequest().authenticated();
+				})
+				.sessionManagement(sess -> {
+					sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+				})
+				.addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
 		return http.build();
 	}
-	
+
 }

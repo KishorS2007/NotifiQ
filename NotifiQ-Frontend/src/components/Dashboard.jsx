@@ -254,7 +254,9 @@ export default function Dashboard({ onLogout }) {
   };
 
   return (
-    <Box className="min-h-screen royal-bg">
+    <>
+      <div className="royal-bg"></div>
+      <Box className="min-h-screen">
       <AppBar position="static" color="transparent" elevation={0} className="light-glass border-b border-white/20">
         <Toolbar className="flex justify-between">
           <Box className="flex items-center">
@@ -511,5 +513,6 @@ export default function Dashboard({ onLogout }) {
         </Alert>
       </Snackbar>
     </Box>
+    </>
   );
 }
