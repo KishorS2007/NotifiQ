@@ -1,21 +1,28 @@
 import { Client } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
 
 const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws';
-const SOCKJS_URL = WS_URL.replace(/^ws/, 'http');
 
 export class WebSocketService {
   constructor() {
     this.client = null;
     this.connected = false;
+    this.subscribers = 0;
+    this.onMessageReceivedCallback = null;
   }
 
   connect(onMessageReceived) {
+    this.onMessageReceivedCallback = onMessageReceived;
+    this.subscribers++;
+    
     const token = localStorage.getItem('token');
     if (!token) return;
 
+    if (this.client && this.client.active) {
+      return; // Already connecting or connected
+    }
+
     this.client = new Client({
-      webSocketFactory: () => new SockJS(SOCKJS_URL),
+      brokerURL: WS_URL,
       connectHeaders: {
         Authorization: `Bearer ${token}`,
       },
@@ -38,7 +45,9 @@ export class WebSocketService {
           try {
             const notification = JSON.parse(message.body);
             // console.log("Parsed notification:", notification);
-            onMessageReceived(notification);
+            if (this.onMessageReceivedCallback) {
+              this.onMessageReceivedCallback(notification);
+            }
           } catch (e) {
             // console.error("Failed to parse STOMP message body:", e);
           }
@@ -55,11 +64,19 @@ export class WebSocketService {
   }
 
   disconnect() {
-    if (this.client !== null) {
-      this.client.deactivate();
-    }
-    this.connected = false;
-    // console.log("Disconnected from WebSocket");
+    this.subscribers--;
+    
+    // Delay deactivation to handle React 18 Strict Mode double-invocations
+    setTimeout(() => {
+      if (this.subscribers <= 0) {
+        this.subscribers = 0;
+        if (this.client !== null) {
+          this.client.deactivate();
+        }
+        this.connected = false;
+        // console.log("Disconnected from WebSocket");
+      }
+    }, 100);
   }
 }
 
